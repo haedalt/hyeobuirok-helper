@@ -4,7 +4,7 @@
 인원 세기, 비율 계산, 문항별 응답 인원 옮겨 적기를 손으로 하지 않아도 되고, 개선방안은 수치를 반영한 초안을 고쳐 쓰기만 하면 됩니다.
 설치 없이 브라우저(크롬·엣지)에서 바로 쓰며, **올린 파일은 이 컴퓨터 밖으로 나가지 않습니다.**
 
-**바로 쓰기:** https://&lt;사용자&gt;.github.io/hyeobuirok-helper/ ← 배포 후 실제 주소로 바꿔 주세요
+**바로 쓰기:** https://haedalt.github.io/hyeobuirok-helper/
 
 ![첫 화면: 왼쪽 5단계 입력, 오른쪽 협의록 미리보기](docs/images/screenshot-start.png)
 
