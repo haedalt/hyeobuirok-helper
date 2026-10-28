@@ -1,0 +1,42 @@
+# 정기시험 결과분석 협의록 작성 도우미
+
+교사가 나이스 자료 4종(엑셀 2·PDF 2)을 올리면 협의록 양식의 빨간 글씨 칸을 채운 HWPX 초안을 만들어 주는, 서버 없는 정적 웹앱.
+
+**요구사항의 기준은 `docs/PRD.md`다.** 구현·판단이 PRD와 어긋나면 PRD를 따르고, PRD에 없거나 모호하면 사용자에게 묻는다.
+
+## 기술 스택
+
+Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 CDN 배포판 `xlsx-0.20.3`, npm 레지스트리 버전 아님), PDF는 `pdfjs-dist`(legacy 빌드, 브라우저·Node 공용), HWPX는 JSZip. 배포는 GitHub Pages(`.github/workflows/deploy.yml`, `vite.config.ts`의 `base`가 저장소 이름).
+
+## 폴더 구조
+
+| 경로 | 책임 |
+| --- | --- |
+| `src/core/` | 계산·판정. UI·파일 형식과 무관한 순수 함수. `types.ts`에 F1~F20 타입 |
+| `src/parsers/` | 엑셀·PDF → 구조화된 데이터. 입력은 `Uint8Array`/`ArrayBuffer`, DOM 의존 금지 |
+| `src/parsers/pdf/loadPdf.ts` | pdf.js 문서 열기(브라우저·Node 공용) |
+| `src/export/` | HWPX 생성(템플릿 표시어 치환), 표 복사용 HTML 등 |
+| `src/ui/` | React 화면. 브라우저 전용 설정(`setupPdfWorker.ts`)도 여기 |
+| `tests/` | Vitest 테스트. `tests/samples.ts`로 샘플 파일을 읽음 |
+| `docs/` | PRD 등 문서 |
+| `templates/` | 협의록 양식(HWP/HWPX). 커밋 대상 |
+| `samples/` | 실제 나이스 자료. **gitignore됨, 커밋 금지** |
+
+## 명령
+
+```bash
+npm run dev      # 개발 서버
+npm test         # Vitest 1회 실행 (npm run test:watch 는 감시 모드)
+npm run build    # 타입 검사(tsc -b) + 프로덕션 빌드 → dist/
+npm run lint     # oxlint
+```
+
+## 규칙
+
+- 파서와 계산은 순수 함수로 `src/parsers`·`src/core`에 두고 UI에서 분리한다. UI는 이 함수들을 호출해 결과를 보여주기만 한다.
+- `samples/`는 절대 커밋하지 않는다(학교명·교사명·IP가 들어 있다). 커밋 전 `git status`로 확인한다. 테스트에 필요한 값은 샘플 파일 대신 기대값으로 적는다.
+- 샘플 파일이 필요한 테스트는 `it.skipIf(!hasSample(...))`로 감싸 샘플이 없는 환경(CI)에서도 통과하게 한다.
+- 숫자 결과는 PRD 9-1장 기대값으로 테스트한다.
+- UI 문구는 전부 한국어.
+- 파일은 브라우저 밖으로 보내지 않는다(PRD 8장 개인정보). 네트워크 호출은 AI 다듬기(선택 기능)만 예외.
+- 한 단계가 끝나면 `npm test`와 `npm run build` 통과를 확인한 뒤 커밋한다.
