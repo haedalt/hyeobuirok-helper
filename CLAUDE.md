@@ -17,7 +17,8 @@ Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 CDN 배포판 `xlsx-
 | `src/parsers/pdf/` | pdf.js로 글자 좌표(화면 좌표, 페이지 회전 반영)를 뽑아 표 복원. 브라우저·Node 공용 |
 | `scripts/pdf-dump.mjs` | PDF 좌표 덤프 도구. 새 양식 PDF 구조 확인용 (`node scripts/pdf-dump.mjs 파일.pdf [쪽]`) |
 | `src/export/` | HWPX 생성(템플릿 표시어 치환), 표 복사용 HTML 등 |
-| `src/ui/` | React 화면. 브라우저 전용 설정(`setupPdfWorker.ts`)도 여기 |
+| `src/ui/` | React 화면. 상태는 `useMinutesState.ts` 한 곳에서 모아 `computeMinutesNumbers`(core)에 넘김. 미리보기 `components/Preview.tsx`는 HWP 양식과 같은 구성. 브라우저 전용 설정(`setupPdfWorker.ts`)·localStorage(`storage.ts`)도 여기 |
+| `scripts/e2e-samples.mjs` | samples/로 화면을 끝까지 눌러 미리보기를 PRD 9-1과 대조 (playwright-core + 설치된 Edge) |
 | `tests/` | Vitest 테스트. `tests/samples.ts`로 샘플 파일을 읽음 |
 | `docs/` | PRD 등 문서 |
 | `templates/` | 협의록 양식(HWP/HWPX). 커밋 대상 |
@@ -30,6 +31,7 @@ npm run dev      # 개발 서버
 npm test         # Vitest 1회 실행 (npm run test:watch 는 감시 모드)
 npm run build    # 타입 검사(tsc -b) + 프로덕션 빌드 → dist/
 npm run lint     # oxlint
+npm run e2e      # 빌드 후 브라우저로 samples/ 전 과정 확인 (samples/ 없으면 건너뜀, 스크린샷은 e2e-screenshots/)
 ```
 
 ## 규칙
@@ -40,4 +42,4 @@ npm run lint     # oxlint
 - 숫자 결과는 PRD 9-1장 기대값으로 테스트한다.
 - UI 문구는 전부 한국어.
 - 파일은 브라우저 밖으로 보내지 않는다(PRD 8장 개인정보). 네트워크 호출은 AI 다듬기(선택 기능)만 예외.
-- 한 단계가 끝나면 `npm test`와 `npm run build` 통과를 확인한 뒤 커밋한다.
+- 한 단계가 끝나면 `npm test`와 `npm run build` 통과를 확인한 뒤 커밋한다. 화면을 바꿨으면 `npm run e2e`도 돌린다.

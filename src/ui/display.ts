@@ -1,0 +1,55 @@
+/** 화면·미리보기 표기 */
+import type { AchievementLevel, Choice, Difficulty, Issue } from '../core';
+import type { ParseWarning } from '../parsers';
+
+export const LEVEL_LABELS: Record<AchievementLevel, string> = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E', U: '미도달' };
+
+const CHOICE_SYMBOLS = ['①', '②', '③', '④', '⑤'] as const;
+
+export function choiceSymbol(choice: Choice): string {
+  return CHOICE_SYMBOLS[choice - 1];
+}
+
+/** 정답률은 파일 값 그대로(소수 둘째 자리까지). 74.96을 75.0으로 올리면 75% 기준 판정과 어긋나 보인다 */
+export function formatRate(rate: number): string {
+  return `${Number(rate.toFixed(2))}%`;
+}
+
+export const DIFFICULTIES: Difficulty[] = ['쉬움', '보통', '어려움'];
+
+/** 교과목 원문 '과학:화학 반응의 세계(3)' → 교과 '과학' (양식 '(OO) 교과' 칸) */
+export function subjectGroup(subjectRaw: string | null | undefined): string {
+  if (!subjectRaw || !subjectRaw.includes(':')) return '';
+  return subjectRaw.split(':')[0].trim();
+}
+
+/** 문제 코드별로 어느 단계에서 보여줄지 */
+const STEP_OF_CODE: Record<string, 2 | 3 | 4> = {
+  META_MISMATCH: 2,
+  EXAMINEES_MISMATCH: 2,
+  ITEM_SET_MISMATCH: 2,
+  ANSWER_MISMATCH: 2,
+  AVERAGE_MISSING: 3,
+  AVERAGE_MISMATCH: 3,
+  BIN_SIZE_NOT_10: 3,
+  BIN_STRADDLES_CUT: 3,
+  BIN_COUNT_MISSING: 3,
+  CUT_OUT_OF_RANGE: 3,
+  CUT_NOT_DESCENDING: 3,
+  COUNT_INVALID: 3,
+  LEVEL_SUM_MISMATCH: 3,
+  EXAMINEES_UNKNOWN: 4,
+  ITEM_INCOMPLETE: 4,
+  EXPECTED_MISSING: 4,
+};
+
+/** 파일이 아직 없어서 생기는 문제는 업로드 칸에서 안내하므로 목록에서 뺀다 */
+const WAITING_CODES = new Set(['FREQUENCY_MISSING', 'ITEM_ANALYSIS_MISSING', 'ESTIMATED_INPUT_MISSING']);
+
+export function issuesForStep(issues: Issue[], step: 2 | 3 | 4): Issue[] {
+  return issues.filter((i) => !WAITING_CODES.has(i.code) && (STEP_OF_CODE[i.code] ?? 2) === step);
+}
+
+export function warningToIssue(w: ParseWarning): Issue {
+  return { severity: 'warning', code: w.code, message: w.message };
+}
