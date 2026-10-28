@@ -1,6 +1,15 @@
 /** 화면·미리보기 표기 */
-import type { AchievementLevel, Choice, Difficulty, Issue } from '../core';
+import type { AchievementLevel, Choice, Difficulty, ImprovementKey, Issue } from '../core';
 import type { ParseWarning } from '../parsers';
+
+/** 개선방안 문단 이름 (양식 개선방안 칸의 순서) */
+export const IMPROVEMENT_LABELS: Record<ImprovementKey, string> = {
+  average: '(평균)',
+  maxMin: '(최고·최하점)',
+  distribution: '(성취수준별 분포 비율 분석)',
+  levelA: '(A 수준 분포)',
+  itemGap: '(정답률 차이 분석)',
+};
 
 export const LEVEL_LABELS: Record<AchievementLevel, string> = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E', U: '미도달' };
 

@@ -3,8 +3,8 @@
  * 양식의 빨간 글씨 칸(F1~F20)에 들어가는 값은 빨간 글씨로 표시한다.
  */
 import type { ReactNode } from 'react';
-import { ACHIEVEMENT_LEVELS, formatPercent, PERCENT_TOTAL_LABEL } from '../../core';
-import { choiceSymbol, formatRate, LEVEL_LABELS } from '../display';
+import { ACHIEVEMENT_LEVELS, formatPercent, IMPROVEMENT_KEYS, PERCENT_TOTAL_LABEL } from '../../core';
+import { choiceSymbol, formatRate, IMPROVEMENT_LABELS, LEVEL_LABELS } from '../display';
 import type { MinutesState } from '../useMinutesState';
 
 /** 빨간 글씨 칸. 값이 없으면 어느 칸인지 보이는 빈칸 */
@@ -221,17 +221,9 @@ export function Preview({ s }: { s: MinutesState }) {
                   <tr>
                     <th scope="row">개선방안</th>
                     <td>
-                      {[
-                        ['F16', '∙ (평균)'],
-                        ['F17', '∙ (최고ㆍ최하점)'],
-                        ['F18', '∙ (성취수준별 분포 비율 분석)'],
-                        ['F19', '(A 수준 분포)'],
-                        ['F20', '∙ (정답률 차이 분석)'],
-                      ].map(([field, label]) => (
-                        <p key={field} className="pv-improve__para">
-                          <span className="pv-pending">
-                            {label} — {field} 초안은 다음 업데이트에서 생성됩니다
-                          </span>
+                      {IMPROVEMENT_KEYS.map((key, i) => (
+                        <p key={key} className="pv-improve__para">
+                          <Red value={s.improvementText(key)} field={`F${16 + i} ${IMPROVEMENT_LABELS[key]}`} />
                         </p>
                       ))}
                     </td>

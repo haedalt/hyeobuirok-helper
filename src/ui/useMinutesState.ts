@@ -2,10 +2,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ACHIEVEMENT_LEVELS,
+  buildImprovementDrafts,
   computeMinutesNumbers,
   DEFAULT_DIFFICULTY_THRESHOLDS,
   expectedFromItemInfo,
+  IMPROVEMENT_KEYS,
   type AchievementLevel,
+  type ImprovementKey,
   type ByLevel,
   type CutMode,
   type CutScores,
@@ -149,6 +152,19 @@ export function useMinutesState() {
     [mode, freq, analysis, itemInfo, scoreSummary, cutScores, levelCounts, expectedMap, subjectName, thresholds],
   );
 
+  // --- 5단계: 개선방안 초안 (src/core/narrative) ---------------------------------
+  const validExpectedAverage =
+    expectedAverageValue !== null && expectedAverageValue >= 0 && expectedAverageValue <= 100 ? expectedAverageValue : null;
+  const drafts = useMemo(
+    () => buildImprovementDrafts({ expectedAverage: validExpectedAverage, numbers: computed.value, memos }),
+    [validExpectedAverage, computed.value, memos],
+  );
+  /** 교사가 고친 문단. 없으면 초안을 그대로 쓴다(초안은 입력이 바뀔 때마다 다시 만들어짐) */
+  const [editedTexts, setEditedTexts] = useState<Partial<Record<ImprovementKey, string>>>({});
+  const improvementText = (key: ImprovementKey): string | null => editedTexts[key] ?? drafts[key];
+  /** 교사가 고쳐서 지금 초안과 내용이 다른 문단 */
+  const editedKeys = IMPROVEMENT_KEYS.filter((k) => editedTexts[k] !== undefined && editedTexts[k] !== drafts[k]);
+
   const difficultyCounts = itemInfo ? countDifficulties(itemInfo.items) : null;
   /** 문항정보표가 없거나 읽지 못해 예상 난이도를 직접 넣어야 하는 문항이 있음 */
   const needsManualExpected =
@@ -268,6 +284,13 @@ export function useMinutesState() {
         return next;
       }),
     memos,
+    // 5단계
+    drafts,
+    improvementText,
+    editedKeys,
+    setImprovementText: (key: ImprovementKey, value: string) => setEditedTexts((t) => ({ ...t, [key]: value })),
+    /** 모든 문단을 지금 입력값으로 만든 초안으로 되돌린다 */
+    resetImprovements: () => setEditedTexts({}),
     setMemo: (no: number, memo: Partial<ItemMemo>) =>
       setMemos((m) => ({ ...m, [no]: { ...(m[no] ?? { misconception: '', distractorReason: '' }), ...memo } })),
     // 계산 결과

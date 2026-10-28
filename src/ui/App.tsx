@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { IMPROVEMENT_KEYS, PLACEHOLDER } from '../core';
 import { issuesForStep } from './display';
 import { Step, type StepStatus } from './components/common';
 import { Preview } from './components/Preview';
@@ -31,8 +32,15 @@ function stepStatuses(s: MinutesState): StepStatus[] {
     status(filesReady, 2),
     status(scoresReady, 3),
     status(itemsReady, 4),
-    'todo',
+    improvementsStatus(s),
   ];
+}
+
+/** 5단계: 문단이 다 있으면 완료, '~~~' 자리가 남아 있으면 확인 필요 */
+function improvementsStatus(s: MinutesState): StepStatus {
+  const texts = IMPROVEMENT_KEYS.map((k) => s.improvementText(k));
+  if (texts.some((t) => !t)) return 'todo';
+  return texts.some((t) => t!.includes(PLACEHOLDER)) ? 'attention' : 'done';
 }
 
 function stepSummaries(s: MinutesState): string[] {
@@ -43,7 +51,7 @@ function stepSummaries(s: MinutesState): string[] {
     loaded ? `파일 ${loaded}개${n.examinees !== null ? ` · 응시 ${n.examinees}명` : ''}` : '',
     s.expectedAverageValue !== null ? `예상 ${s.expectedAverageValue} / 실제 ${n.actualAverage ?? '—'}` : '',
     n.items.length ? `차이 문항 ${n.mismatchItems.length}개` : '',
-    '',
+    s.editedKeys.length ? `직접 고친 문단 ${s.editedKeys.length}개` : '',
   ];
 }
 
@@ -75,7 +83,7 @@ export default function App() {
       case 4:
         return <Step4Items s={s} />;
       default:
-        return <Step5Export />;
+        return <Step5Export s={s} />;
     }
   }
 

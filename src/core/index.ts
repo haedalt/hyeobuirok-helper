@@ -6,3 +6,4 @@ export * from './distribution';
 export * from './items';
 export * from './scores';
 export * from './minutes';
+export * from './narrative';

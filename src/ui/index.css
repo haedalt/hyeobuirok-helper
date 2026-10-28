@@ -790,7 +790,18 @@ legend {
   line-height: 1.4;
 }
 
-.pv-pending {
-  color: #c77;
-  font-style: italic;
+.pv-improve__para {
+  white-space: pre-wrap;
+}
+
+.improvement__badge {
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 4px 0;
+  width: 100%;
 }
