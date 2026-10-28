@@ -14,7 +14,8 @@ Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 CDN 배포판 `xlsx-
 | --- | --- |
 | `src/core/` | 계산·판정. UI·파일 형식과 무관한 순수 함수. `types.ts`에 F1~F20 타입 |
 | `src/parsers/` | 엑셀·PDF → 구조화된 데이터. 입력은 `Uint8Array`/`ArrayBuffer`, DOM 의존 금지 |
-| `src/parsers/pdf/loadPdf.ts` | pdf.js 문서 열기(브라우저·Node 공용) |
+| `src/parsers/pdf/` | pdf.js로 글자 좌표(화면 좌표, 페이지 회전 반영)를 뽑아 표 복원. 브라우저·Node 공용 |
+| `scripts/pdf-dump.mjs` | PDF 좌표 덤프 도구. 새 양식 PDF 구조 확인용 (`node scripts/pdf-dump.mjs 파일.pdf [쪽]`) |
 | `src/export/` | HWPX 생성(템플릿 표시어 치환), 표 복사용 HTML 등 |
 | `src/ui/` | React 화면. 브라우저 전용 설정(`setupPdfWorker.ts`)도 여기 |
 | `tests/` | Vitest 테스트. `tests/samples.ts`로 샘플 파일을 읽음 |

@@ -39,3 +39,6 @@ export interface ValuePair {
 }
 
 export type ExcelKind = 'frequency' | 'itemAnalysis';
+export type PdfKind = 'itemInfo' | 'scoreSummary';
+/** 도수분포표 / 문항분석표 / 문항정보표 / 성적집계표 */
+export type FileKind = ExcelKind | PdfKind;
