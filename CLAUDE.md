@@ -1,6 +1,6 @@
 # 정기시험 결과분석 협의록 작성 도우미
 
-교사가 나이스 자료 4종(엑셀 2·PDF 2)을 올리면 협의록 양식의 빨간 글씨 칸을 채운 HWPX 초안을 만들어 주는, 서버 없는 정적 웹앱.
+교사가 나이스 자료 4종(엑셀 권장, 문항정보표·성적집계표는 PDF도 가능)을 올리면 협의록 양식의 빨간 글씨 칸을 채운 HWPX 초안을 만들어 주는, 서버 없는 정적 웹앱. 배포: https://haedalt.github.io/hyeobuirok-helper/
 
 **요구사항의 기준은 `docs/PRD.md`다** (실제 시험 수치가 들어 있어 저장소에 올리지 않는 로컬 전용 파일). 구현·판단이 PRD와 어긋나면 PRD를 따르고, PRD에 없거나 모호하면 사용자에게 묻는다.
 
@@ -19,7 +19,7 @@ Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 배포판 `xlsx-0.20
 | `src/parsers/pdf/` | pdf.js로 글자 좌표(화면 좌표, 페이지 회전 반영)를 뽑아 표 복원. 브라우저·Node 공용 |
 | `scripts/pdf-dump.mjs` | PDF 좌표 덤프 도구. 새 양식 PDF 구조 확인용 (`node scripts/pdf-dump.mjs 파일.pdf [쪽]`) |
 | `src/export/` | `hwpx.ts`: 템플릿 표시어 치환·블록 삭제·문항 행 복제로 HWPX 생성(@xmldom/xmldom + JSZip, 브라우저·Node 공용). `hwpxInput.ts`: 입력 검사(가벼움). `clipboard.ts`: 표 복사(브라우저 전용) |
-| `src/ui/` | React 화면. 상태는 `useMinutesState.ts` 한 곳에서 모아 `computeMinutesNumbers`(core)에 넘김. 미리보기 `components/Preview.tsx`는 HWP 양식과 같은 구성. 브라우저 전용 설정(`setupPdfWorker.ts`)·localStorage(`storage.ts`)도 여기 |
+| `src/ui/` | React 화면. 상태는 `useMinutesState.ts` 한 곳에서 모아 `computeMinutesNumbers`(core)에 넘김. 미리보기 `components/Preview.tsx`는 HWP 양식과 같은 구성. 내보내기 버튼 동작(`exportActions.ts`)·localStorage(`storage.ts`)도 여기. pdf.js 워커는 `src/parsers/pdf/loadPdf.ts`가 PDF를 열 때 지정 |
 | `scripts/e2e-demo.mjs` | '예시 파일로 체험하기'로 화면 전 과정 확인. 배포 주소도 가능 (playwright-core + 설치된 Edge) |
 | `tests/local/` | **로컬 전용**(gitignore). samples/ 기대값 테스트와 `e2e-samples.mjs`(PRD 9-1과 화면 대조) |
 | `tests/` | Vitest 테스트. `tests/samples.ts`로 샘플 파일을 읽음 |
