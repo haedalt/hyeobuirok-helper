@@ -6,7 +6,9 @@
 
 ## 기술 스택
 
-Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 CDN 배포판 `xlsx-0.20.3`, npm 레지스트리 버전 아님), PDF는 `pdfjs-dist`(legacy 빌드, 브라우저·Node 공용), HWPX는 JSZip. 배포는 GitHub Pages(`.github/workflows/deploy.yml`, `vite.config.ts`의 `base`가 저장소 이름).
+Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 배포판 `xlsx-0.20.3`을 `vendor/`에 두고 `file:`로 설치. npm 레지스트리 버전 아님, CI가 외부 CDN에 기대지 않게), PDF는 `pdfjs-dist`(legacy 빌드, 브라우저·Node 공용, PDF를 받았을 때만 동적 import), HWPX는 JSZip + @xmldom/xmldom. 배포는 GitHub Pages(`.github/workflows/deploy.yml`, `vite.config.ts`의 `base`가 저장소 이름).
+
+**입력 형식:** 4종 모두 엑셀 권장. 문항정보표·성적집계표는 엑셀(`src/parsers/excel/`)과 PDF(`src/parsers/pdf/`) 둘 다 받고, `parseItemInfo`·`parseScoreSummary`(src/parsers/index.ts)가 형식을 스스로 구분한다. 결과 형식·검증은 `src/parsers/itemInfo.ts`·`scoreSummary.ts` 공통이라 같은 시험이면 결과가 같아야 한다(`tests/demo-pdf.test.ts`, 로컬 `tests/local/excel-vs-pdf.test.ts`).
 
 ## 폴더 구조
 

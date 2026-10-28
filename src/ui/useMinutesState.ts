@@ -50,7 +50,7 @@ function cutsToInputs(cuts: CutScores | undefined): Record<CutKey, string> {
 }
 
 /** public/demo/의 가상 예시 파일 (scripts/make-demo.mjs로 생성) */
-const DEMO_FILES = ['예시_문항분석표.xlsx', '예시_문항정보표.pdf', '예시_성적집계표.pdf', '예시_도수분포표.xlsx'];
+const DEMO_FILES = ['예시_문항분석표.xlsx', '예시_문항정보표.xlsx', '예시_성적집계표.xlsx', '예시_도수분포표.xlsx'];
 
 const EMPTY_COUNTS: Record<AchievementLevel, string> = { A: '', B: '', C: '', D: '', E: '', U: '' };
 

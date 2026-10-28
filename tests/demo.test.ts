@@ -18,8 +18,8 @@ const demo = (name: string) => new Uint8Array(readFileSync(resolve(import.meta.d
 const FILES = {
   frequency: '예시_도수분포표.xlsx',
   itemAnalysis: '예시_문항분석표.xlsx',
-  itemInfo: '예시_문항정보표.pdf',
-  scoreSummary: '예시_성적집계표.pdf',
+  itemInfo: '예시_문항정보표.xlsx',
+  scoreSummary: '예시_성적집계표.xlsx',
 } as const;
 
 describe('데모 파일 4종', async () => {

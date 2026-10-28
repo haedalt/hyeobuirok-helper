@@ -7,8 +7,8 @@ import { parseFrequencyTable, parseItemAnalysis, parseItemInfo, parseScoreSummar
 export const DEMO_FILES = {
   frequency: '예시_도수분포표.xlsx',
   itemAnalysis: '예시_문항분석표.xlsx',
-  itemInfo: '예시_문항정보표.pdf',
-  scoreSummary: '예시_성적집계표.pdf',
+  itemInfo: '예시_문항정보표.xlsx',
+  scoreSummary: '예시_성적집계표.xlsx',
 } as const;
 
 export function readDemo(name: string): Uint8Array {

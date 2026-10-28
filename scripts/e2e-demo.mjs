@@ -37,8 +37,10 @@ page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
 page.on('pageerror', (e) => consoleErrors.push(String(e)));
 const origin = new URL(url).origin;
 const externalRequests = [];
+const pdfRequests = [];
 page.on('request', (r) => {
   const u = r.url();
+  if (/textItems|pdf.worker/.test(u)) pdfRequests.push(u);
   if (!u.startsWith(origin) && !u.startsWith('data:') && !u.startsWith('blob:')) externalRequests.push(u);
 });
 const cellTexts = (selector) => page.$$eval(selector, (els) => els.map((e) => e.textContent.trim()));
@@ -124,6 +126,7 @@ try {
 
   check('콘솔 오류 없음', consoleErrors, []);
   check('외부로 나간 요청 없음', externalRequests, []);
+  check('엑셀만 올리면 PDF 읽기 부품(pdf.js)을 내려받지 않음', pdfRequests, []);
 } catch (e) {
   failures++;
   console.error('FAIL  예외:', e);

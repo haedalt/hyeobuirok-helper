@@ -30,7 +30,10 @@ export function Step2Upload({ s }: { s: MinutesState }) {
         <p className="dropzone__main">
           나이스에서 내려받은 파일을 <strong>한꺼번에</strong> 여기로 끌어다 놓으세요.
         </p>
-        <p className="dropzone__sub">파일 이름이 'download-숫자'여도 내용을 보고 종류를 알아서 나눕니다.</p>
+        <p className="dropzone__sub">
+          4종 모두 <strong>엑셀</strong>로 내려받는 것을 권장합니다(문항정보표·성적집계표는 PDF도 읽습니다). 파일 이름이
+          'download-숫자'여도 내용을 보고 종류를 알아서 나눕니다.
+        </p>
         <button type="button" className="button" onClick={() => inputRef.current?.click()} disabled={s.busy}>
           {s.busy ? '읽는 중…' : '파일 선택'}
         </button>

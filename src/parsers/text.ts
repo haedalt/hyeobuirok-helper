@@ -59,7 +59,7 @@ export function parseExamMeta(lines: string[]): ExamMeta {
       meta.grade = matchInt(line, /(?<!\d)(\d)\s*학년(?!도)/);
     }
     if (meta.examName === null) {
-      const m = /고사\s*:\s*(.*?)(?=\s*(?:교과목\s*:|급간\s*:|교과담당|$))/.exec(line);
+      const m = /고사\s*:\s*(.*?)(?=\s*(?:고사\s*:|교과목\s*:|급간\s*:|교과담당|$))/.exec(line);
       if (m && m[1]) meta.examName = m[1].trim();
     }
     if (meta.subjectRaw === null) {

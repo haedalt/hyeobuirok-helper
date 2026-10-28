@@ -49,7 +49,8 @@ export function readGrid(data: ArrayBuffer | Uint8Array): { grid: Grid; error: s
 export function rowTexts(grid: Grid): string[] {
   return grid.map((row) =>
     row
-      .filter((v) => v !== null && String(v).trim() !== '')
+      // 병합 칸을 펼쳐 같은 값이 옆 칸에 반복되면 한 번만 쓴다 ('고사 : 1차 정기시험'이 8칸 병합인 양식이 있음)
+      .filter((v, c) => v !== null && String(v).trim() !== '' && v !== row[c - 1])
       .map((v) => String(v).trim())
       .join('  '),
   );

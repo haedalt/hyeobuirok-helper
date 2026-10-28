@@ -20,7 +20,7 @@ describe('파일 종류 판별 (4종)', () => {
       '%PDF-1.4\n1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj\n2 0 obj <</Type/Pages/Kids[3 0 R]/Count 1>> endobj\n' +
         '3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>> endobj\ntrailer <</Root 1 0 R>>\n%%EOF\n',
     );
-    expect(await detectFileKind(blank)).toEqual({ kind: null, noText: true });
+    expect(await detectFileKind(blank)).toEqual({ kind: null, format: 'pdf', noText: true });
     const { value, warnings } = await parseItemInfo(blank);
     expect(value.items).toEqual([]);
     expect(warnings.map((w) => w.code)).toEqual(['NO_TEXT']);

@@ -2,30 +2,10 @@
  * 정기시험 성적집계표 PDF 파서 (PRD 3-4).
  * 학년의 모든 과목이 열로 나열되어 있으므로, 교과명으로 열을 찾아 그 열만 읽는다.
  */
-import { parseExamMeta, splitSubject, squash, toInt, toNumber } from '../text';
-import type { ExamMeta, ParseResult, ParseWarning } from '../types';
+import { applySubject, emptyScoreSummary, matchSubject, requireValue, subjectNotFound, type SubjectScoreSummary } from '../scoreSummary';
+import { parseExamMeta, squash, toInt, toNumber } from '../text';
+import type { ParseResult, ParseWarning } from '../types';
 import { centerX, extractTextItems, findItem, groupLines, NO_TEXT_MESSAGE, type PdfTextItem } from './textItems';
-
-export interface SubjectScoreSummary {
-  /** 학년도·학기·학년·고사 + 찾은 열의 교과목 */
-  meta: ExamMeta;
-  /** 표에 있는 모든 과목 열 머리글 (줄바꿈·공백 제거). 과목을 못 찾았을 때 고르게 할 목록 */
-  subjects: string[];
-  /** 찾은 열의 머리글. 못 찾으면 null */
-  subject: string | null;
-  /** 과목평균 → F3 */
-  average: number | null;
-  /** 최고점 → F17 */
-  maxScore: number | null;
-  /** 최하점 */
-  minScore: number | null;
-  /** 최하점(전입생제외) → F17 */
-  minScoreExcludingTransfers: number | null;
-  examinees: number | null;
-  absentees: number | null;
-  /** 학반별 평균. [0] = 1반. v1 미사용 */
-  classAverages: (number | null)[];
-}
 
 interface Column {
   header: string;
@@ -40,7 +20,7 @@ const ROW_TOLERANCE = 6;
 /**
  * @param subjectName 다른 파일에서 읽은 교과명. 원문('과학:화학 반응의 세계(3)')이나 정리본('화학 반응의 세계') 모두 가능
  */
-export async function parseScoreSummary(
+export async function parseScoreSummaryPdf(
   data: ArrayBuffer | Uint8Array,
   subjectName: string,
 ): Promise<ParseResult<SubjectScoreSummary>> {
@@ -56,18 +36,7 @@ export function parseScoreSummaryItems(
   subjectName: string,
   warnings: ParseWarning[] = [],
 ): SubjectScoreSummary {
-  const summary: SubjectScoreSummary = {
-    meta: parseExamMeta(groupLines(items.filter((i) => i.page === 1)).map((l) => l.text)),
-    subjects: [],
-    subject: null,
-    average: null,
-    maxScore: null,
-    minScore: null,
-    minScoreExcludingTransfers: null,
-    examinees: null,
-    absentees: null,
-    classAverages: [],
-  };
+  const summary = emptyScoreSummary(parseExamMeta(groupLines(items.filter((i) => i.page === 1)).map((l) => l.text)));
   if (items.length === 0) return summary;
 
   // 왼쪽 위 '교과목' 칸과 첫 학반 행('1') 사이가 과목 머리글 영역
@@ -88,17 +57,12 @@ export function parseScoreSummaryItems(
     onPage.filter((i) => i.x >= labelRight - 1 && i.y >= cornerLabel.y - 30 && i.y < headerBottom),
   );
   summary.subjects = columns.map((c) => c.header);
-  const column = matchColumn(columns, subjectName);
+  const column = columns[matchSubject(summary.subjects, subjectName)];
   if (!column) {
-    warnings.push({
-      code: 'SUBJECT_NOT_FOUND',
-      message: `성적집계표에서 '${subjectName}' 과목 열을 찾지 못했습니다.`,
-    });
+    warnings.push(subjectNotFound(subjectName));
     return summary;
   }
-  summary.subject = column.header;
-  const { name, credits } = splitSubject(column.header);
-  summary.meta = { ...summary.meta, subjectRaw: column.header, subjectName: name, credits };
+  applySubject(summary, column.header);
 
   const valueAt = (rowY: number | null, field: string, read: (v: string) => number | null): number | null => {
     if (rowY === null) {
@@ -119,10 +83,7 @@ export function parseScoreSummaryItems(
     }
     return value;
   };
-  const required = (value: number | null, field: string) => {
-    if (value === null) warnings.push({ code: 'VALUE_MISSING', message: `성적집계표 ${column.header} '${field}' 값이 없습니다.` });
-    return value;
-  };
+  const required = (value: number | null, field: string) => requireValue(value, column.header, field, warnings);
 
   // '최하점(전입생제외)'는 '최 하 점' / '(전입생제외)' 두 줄이고, 값은 그 사이 높이에 있다
   const transferNote = rowLabels.find((i) => squash(i.str) === '(전입생제외)') ?? null;
@@ -179,15 +140,4 @@ function buildColumns(headerItems: PdfTextItem[]): Column[] {
       right: centers[k] + nextGap / 2,
     };
   });
-}
-
-/** 교과명 비교: 공백·줄바꿈을 지우고 교과군 접두어('과학:')·학점('(3)')을 뗀 이름이 같은 열 */
-function matchColumn(columns: Column[], subjectName: string): Column | null {
-  const key = (s: string) => squash(splitSubject(squash(s)).name);
-  const target = key(subjectName);
-  if (!target) return null;
-  const exact = columns.filter((c) => key(c.header) === target);
-  if (exact.length === 1) return exact[0];
-  const partial = columns.filter((c) => key(c.header).includes(target));
-  return partial.length === 1 ? partial[0] : null;
 }

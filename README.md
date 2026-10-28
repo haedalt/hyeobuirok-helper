@@ -19,17 +19,17 @@
 
 ### 1. 나이스에서 파일 내려받기
 
-파일 이름은 'download-숫자'여도 괜찮습니다. 앱이 내용을 보고 종류를 알아서 나눕니다.
+**4종 모두 엑셀로 내려받는 것을 권장합니다.** 나이스에서 형식을 고를 수 있습니다(문항정보표·성적집계표는 PDF로 받아도 읽습니다). 파일 이름은 'download-숫자'여도 괜찮습니다. 앱이 내용을 보고 종류를 알아서 나눕니다.
 
 | 파일 | 형식 | 나이스 메뉴 경로 | 협의록에서 쓰는 값 | 필요 |
 | --- | --- | --- | --- | --- |
 | 문항분석표 | 엑셀 | 평가 › 정기시험조회/통계 › 정기시험통계 › 문항분석표 | 실제 정답률, 답안별 응답 인원 | 필수 |
-| 문항정보표 | PDF | 평가 › 정기시험 › 문항정보표관리 › 조회 | 예상 난이도 | 필수 |
-| 성적집계표 | PDF | 평가 › 정기시험조회/통계 › 정기시험통계 › 성적집계표 | 실제 평균, 최고·최하점 | 필수 |
+| 문항정보표 | 엑셀 (PDF도 가능) | 평가 › 정기시험 › 문항정보표관리 › 조회 | 예상 난이도 | 필수 |
+| 성적집계표 | 엑셀 (PDF도 가능) | 평가 › 정기시험조회/통계 › 정기시험통계 › 성적집계표 | 실제 평균, 최고·최하점 | 필수 |
 | 도수분포표 | 엑셀 | 정기시험 도수분포표 | 성취수준별 인원 | 고정분할만 |
 
 - 문항분석표는 **한 반(강의실) 파일 하나만** 있으면 됩니다. 괄호 안의 학년 전체 값을 씁니다.
-- 문항정보표 PDF를 읽지 못하면(스캔본 등) 2단계에서 '예상 난이도를 직접 입력하겠습니다'를 고르고 4단계에서 문항별로 고르면 됩니다.
+- 문항정보표를 읽지 못하면(스캔한 PDF 등) 2단계에서 '예상 난이도를 직접 입력하겠습니다'를 고르고 4단계에서 문항별로 고르면 됩니다.
 
 ### 2. 고정분할과 추정분할
 
@@ -103,7 +103,7 @@ npm run e2e      # 빌드 후 '예시 파일로 체험하기'로 브라우저 �
 node scripts/e2e-demo.mjs https://<사용자>.github.io/<저장소>/   # 배포된 주소에서 같은 확인
 ```
 
-기술 스택: Vite + React + TypeScript, Vitest, SheetJS(엑셀), pdfjs-dist(PDF 글자 좌표로 표 복원), JSZip(HWPX).
+기술 스택: Vite + React + TypeScript, Vitest, SheetJS(엑셀, `vendor/`에 공식 배포판), pdfjs-dist(PDF 글자 좌표로 표 복원, PDF를 올렸을 때만 불러옴), JSZip·@xmldom/xmldom(HWPX).
 
 | 경로 | 내용 |
 | --- | --- |
@@ -113,8 +113,9 @@ node scripts/e2e-demo.mjs https://<사용자>.github.io/<저장소>/   # 배포�
 | `src/core/constants.ts` | 고정분할 경계, 난이도 판정 기준(25%/75%) |
 | `src/ui/` | 화면. 상태는 `useMinutesState.ts`, 미리보기는 `components/Preview.tsx` |
 | `src/export/` | 내보내기. `hwpx.ts`는 `templates/협의록_양식.hwpx`의 표시어(PRD 4-1)를 값으로 바꿔 HWPX를 만든다(브라우저·Node 공용). `clipboard.ts`는 표 복사 |
-| `public/demo/` | 공개용 가상 예시 파일. `node scripts/make-demo.mjs <한글 TTF 글꼴>`로 다시 만든다 (나눔고딕 OFL 권장). 정답값은 `tests/fixtures/demo-expected.json` |
+| `public/demo/` | 공개용 가상 예시 파일(엑셀 4종). `node scripts/make-demo.mjs <한글 TTF 글꼴>`로 다시 만든다 (나눔고딕 OFL 권장). 같은 데이터의 PDF판은 `tests/fixtures/demo-pdf/`, 정답값은 `tests/fixtures/demo-expected.json` |
 | `scripts/` | 데모 생성, 브라우저 검사, PDF 좌표 덤프(`pdf-dump.mjs`) |
+| `vendor/` | SheetJS 공식 배포판(`xlsx-0.20.3.tgz`, Apache-2.0). 설치 때 외부 CDN에 기대지 않도록 저장소에 둔다 |
 | `templates/` | 협의록 양식. `협의록_양식.hwpx`(표시어 57개 + 선택 4개)가 내보내기 템플릿 |
 | `samples/`, `tests/local/`, `docs/PRD.md` | 실제 학교 자료와 그 기대값. **저장소에 올리지 않는다** (`.gitignore`) |
 

@@ -21,14 +21,14 @@ export const FILE_KINDS: Record<FileKind, FileKindInfo> = {
   itemInfo: {
     kind: 'itemInfo',
     label: '문항정보표',
-    format: 'PDF',
+    format: '엑셀·PDF',
     neisPath: '평가 › 정기시험 › 문항정보표관리 › 조회',
     usage: '예상 난이도',
   },
   scoreSummary: {
     kind: 'scoreSummary',
     label: '성적집계표',
-    format: 'PDF',
+    format: '엑셀·PDF',
     neisPath: '평가 › 정기시험조회/통계 › 정기시험통계 › 성적집계표',
     usage: '실제 평균, 최고·최하점',
   },

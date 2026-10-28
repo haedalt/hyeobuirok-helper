@@ -71,14 +71,15 @@ function AREAS() {
   ];
 }
 
+/** 성적집계표의 다른 과목 열. lines는 PDF 머리글 줄바꿈, name은 엑셀 머리글 */
 const OTHER_SUBJECTS = [
-  { lines: ['국어:화법과', '언어(4)'], examinees: 246 },
-  { lines: ['수학:미적분', 'Ⅰ(4)'], examinees: 246 },
-  { lines: ['영어:영어', 'Ⅱ(4)'], examinees: 247 },
-  { lines: ['사회(역사', '/도덕포함', '):세계시민', '과 지리(3)'], examinees: 122 },
-  { lines: ['사회(역사', '/도덕포함', '):법과 사회', '(3)'], examinees: 109 },
-  { lines: ['과학:물리학', '(3)'], examinees: 73 },
-  { lines: ['과학:생명', '과학(3)'], examinees: 109 },
+  { name: '국어:화법과 언어(4)', lines: ['국어:화법과', '언어(4)'], examinees: 246 },
+  { name: '수학:미적분Ⅰ(4)', lines: ['수학:미적분', 'Ⅰ(4)'], examinees: 246 },
+  { name: '영어:영어Ⅱ(4)', lines: ['영어:영어', 'Ⅱ(4)'], examinees: 247 },
+  { name: '사회(역사/도덕포함):세계시민과 지리(3)', lines: ['사회(역사', '/도덕포함', '):세계시민', '과 지리(3)'], examinees: 122 },
+  { name: '사회(역사/도덕포함):법과 사회(3)', lines: ['사회(역사', '/도덕포함', '):법과 사회', '(3)'], examinees: 109 },
+  { name: '과학:물리학(3)', lines: ['과학:물리학', '(3)'], examinees: 73 },
+  { name: '과학:생명과학(3)', lines: ['과학:생명', '과학(3)'], examinees: 109 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -407,7 +408,24 @@ async function makeItemInfo(path) {
 // ---------------------------------------------------------------------------
 // 성적집계표 (A4 가로) — 학년 모든 과목이 열
 // ---------------------------------------------------------------------------
-async function makeScoreSummary(path, summary) {
+/** 성적집계표 열 8개: 다른 과목 값은 가상으로 만든다 (PDF·엑셀이 같은 값을 쓰도록 한 번만 만든다) */
+function buildScoreColumns(summary) {
+  const ours = { name: SUBJECT_RAW, lines: ['과학:화학', '반응의', `세계(${CREDITS})`], ...summary };
+  const others = OTHER_SUBJECTS.map((s) => {
+    const classAverages = Array.from({ length: 10 }, () => round(35 + rand() * 30, 1));
+    return {
+      ...s,
+      classAverages,
+      absentees: Math.floor(rand() * 3),
+      max: [100, 98, 96.5][Math.floor(rand() * 3)],
+      min: round(rand() * 9, 1),
+      average: round(mean(classAverages), 1),
+    };
+  });
+  return [...others.slice(0, 6), ours, others[6]];
+}
+
+async function makeScoreSummary(path, columns) {
   const { doc, addPage, text, center, right } = await makePdf(842, 595);
   const page = addPage();
   text(page, DATE, 762.9, 43.5);
@@ -427,20 +445,6 @@ async function makeScoreSummary(path, summary) {
   text(page, '(전입생제외)', 57.5, 461.4, 9);
   text(page, '과목평균', 63.4, Y.average);
 
-  const ours = { lines: ['과학:화학', '반응의', `세계(${CREDITS})`], ...summary };
-  // 다른 과목 값은 가상으로 만든다
-  const others = OTHER_SUBJECTS.map((s) => {
-    const classAverages = ROW_Y.map(() => round(35 + rand() * 30, 1));
-    return {
-      ...s,
-      classAverages,
-      absentees: Math.floor(rand() * 3),
-      max: [100, 98, 96.5][Math.floor(rand() * 3)],
-      min: round(rand() * 9, 1),
-      average: round(mean(classAverages), 1),
-    };
-  });
-  const columns = [...others.slice(0, 6), ours, others[6]];
   columns.forEach((col, k) => {
     const cx = 143.95 + 54.94 * k;
     const top = 166.7 - ((col.lines.length - 1) * 10) / 2;
@@ -463,6 +467,141 @@ async function makeScoreSummary(path, summary) {
 }
 
 // ---------------------------------------------------------------------------
+// 문항정보표 엑셀판 (B1:W46) — 실제 나이스 엑셀과 같은 배치. 12번 성취기준은 다음 쪽으로 넘어간다
+// ---------------------------------------------------------------------------
+function makeItemInfoXlsx(path) {
+  const { ws, set, merge } = makeSheet('B1:W46');
+  // makeSheet의 c는 B열 기준 0부터: B=0, C=1, D=2, … O=13, Q=15, S=17, T=18, V=20
+  const COL = { no: 0, area: 1, std: 2, hard: 13, normal: 15, easy: 17, points: 18, answer: 20 };
+  const LEVEL_COL = { 어려움: COL.hard, 보통: COL.normal, 쉬움: COL.easy };
+  const rowMerges = (r) => {
+    merge(r, COL.std, r, 12);
+    merge(r, COL.hard, r, 14);
+    merge(r, COL.normal, r, 16);
+    merge(r, COL.points, r, 19);
+    merge(r, COL.answer, r, 21);
+  };
+  const footer = (r, n) => {
+    set(r, 5, n);
+    set(r, 6, '/');
+    set(r, 7, 2);
+    set(r, 10, SCHOOL);
+  };
+  set(1, 0, `( ${SUBJECT}(${CREDITS}) ) 과목`);
+  for (const [c, s] of [[10, '계'], [12, '부 장'], [16, '교 감'], [19, '교 장']]) set(2, c, s);
+  set(4, 0, ' 문  항  정  보  표');
+  set(4, 3, '(과목 코드 : 21)');
+  set(7, 0, `${YEAR}년도 ${SEMESTER}학기 ${EXAM}`);
+  set(7, 4, ` ${GRADE}학년 `);
+  set(7, 14, `총 문항수 ${ITEMS.length} 문항`);
+  set(8, 0, `고사일시 ${YEAR}년 10월 16일 2교시`);
+  set(8, 7, '공동출제자');
+  set(8, 11, `${TEACHER} (인)`);
+  set(9, 0, '총점 100.00 점');
+  set(9, 7, '선택형 100.00 점  서답형 0.00 점');
+  set(10, 0, '선택형 문항');
+  set(11, COL.no, '문항번호');
+  set(11, COL.area, '내용영역');
+  set(11, COL.std, '성취기준');
+  set(11, COL.hard, '난이도');
+  set(11, COL.points, '배점');
+  set(11, COL.answer, '정답');
+  merge(11, COL.no, 12, COL.no);
+  merge(11, COL.area, 12, COL.area);
+  merge(11, COL.std, 12, 12);
+  merge(11, COL.hard, 11, 17);
+  merge(11, COL.points, 12, 19);
+  merge(11, COL.answer, 12, 21);
+  set(12, COL.hard, '어려움');
+  set(12, COL.normal, '보통');
+  set(12, COL.easy, '쉬움');
+  merge(12, COL.hard, 12, 14);
+  merge(12, COL.normal, 12, 16);
+
+  const PAGE1 = 12;
+  let r = 13;
+  for (const item of ITEMS) {
+    const std = item.area.std.join('');
+    set(r, COL.no, item.no);
+    set(r, COL.area, item.area.name);
+    if (item.no === PAGE1) {
+      // 쪽 경계: 성취기준 앞부분만 이 행에, 나머지는 다음 쪽 첫 줄 (번호 칸은 비어 있음)
+      set(r, COL.std, item.area.std[0]);
+      footer(r + 2, 1);
+      set(r + 4, COL.std, item.area.std.slice(1).join(''));
+      merge(r + 4, COL.std, r + 4, 12);
+    } else {
+      set(r, COL.std, std);
+    }
+    set(r, LEVEL_COL[item.expected], '○');
+    set(r, COL.points, item.points);
+    set(r, COL.answer, item.answer);
+    rowMerges(r);
+    r += item.no === PAGE1 ? 5 : 1;
+  }
+  const counts = { 어려움: 0, 보통: 0, 쉬움: 0 };
+  ITEMS.forEach((item) => counts[item.expected]++);
+  set(r, COL.no, '총합계');
+  for (const [k, c] of Object.entries(LEVEL_COL)) set(r, c, counts[k]);
+  set(r, COL.points, 100);
+  set(r, COL.answer, '-');
+  set(r + 1, COL.no, '비율(%)');
+  for (const [k, c] of Object.entries(LEVEL_COL)) set(r + 1, c, Math.round((counts[k] / ITEMS.length) * 100));
+  set(r + 1, COL.points, 100);
+  set(r + 1, COL.answer, '-');
+  footer(r + 3, 2);
+  writeBook(ws, path);
+}
+
+// ---------------------------------------------------------------------------
+// 성적집계표 엑셀판 (B1:V31) — 과목 열은 병합 칸 여러 개에 걸친다
+// ---------------------------------------------------------------------------
+function makeScoreSummaryXlsx(path, columns) {
+  const { ws, set, merge } = makeSheet('B1:V31');
+  set(1, 15, DATE);
+  set(3, 5, '정기시험 성적집계표');
+  merge(3, 5, 3, 17);
+  set(5, 0, `${YEAR}학년도    ${SEMESTER}학기   주간 일반계   ${GRADE}학년`);
+  merge(5, 0, 5, 19);
+  set(7, 0, `고사 :  ${EXAM}`);
+  merge(7, 0, 7, 7);
+  set(9, 0, '＊표시된 숫자는 반평균점수입니다.');
+  merge(9, 0, 9, 2);
+  set(11, 0, '         교과목\n반');
+  // 과목 열 위치와 병합 폭 (실제 양식처럼 1~3칸)
+  const SPANS = [[1, 1], [2, 2], [4, 2], [6, 1], [7, 2], [9, 3], [12, 2], [14, 3]];
+  const ROWS = { examinees: 22, absentees: 23, max: 24, min: 25, minExcl: 26, average: 27 };
+  for (let k = 0; k < 10; k++) set(12 + k, 0, k + 1);
+  set(ROWS.examinees, 0, '응 시 자');
+  set(ROWS.absentees, 0, '결 시 자');
+  set(ROWS.max, 0, '최 고 점');
+  set(ROWS.min, 0, '최 하 점');
+  set(ROWS.minExcl, 0, '최 하 점\n(전입생제외)');
+  set(ROWS.average, 0, '과목평균');
+  columns.forEach((col, k) => {
+    const [c, span] = SPANS[k];
+    const cell = (r, v) => {
+      set(r, c, v);
+      if (span > 1) merge(r, c, r, c + span - 1);
+    };
+    cell(11, col.name);
+    col.classAverages.forEach((v, i) => v !== null && cell(12 + i, v));
+    cell(ROWS.examinees, `${col.examinees} 명`);
+    cell(ROWS.absentees, `${col.absentees} 명`);
+    cell(ROWS.max, col.max);
+    cell(ROWS.min, col.min);
+    cell(ROWS.minExcl, col.min);
+    cell(ROWS.average, col.average);
+  });
+  set(29, 9, 1);
+  set(29, 10, '/');
+  set(29, 11, 1);
+  set(29, 16, SCHOOL);
+  merge(29, 16, 29, 20);
+  writeBook(ws, path);
+}
+
+// ---------------------------------------------------------------------------
 // 실행
 // ---------------------------------------------------------------------------
 const outDir = resolve('public/demo');
@@ -482,10 +621,16 @@ const summary = {
   }),
 };
 
+// 체험용은 엑셀 4종(권장 형식). PDF판은 예비 경로 테스트용으로 tests/fixtures/에 둔다
+const pdfDir = resolve('tests/fixtures/demo-pdf');
+mkdirSync(pdfDir, { recursive: true });
 makeFrequency(resolve(outDir, '예시_도수분포표.xlsx'));
 makeItemAnalysis(resolve(outDir, '예시_문항분석표.xlsx'));
-await makeItemInfo(resolve(outDir, '예시_문항정보표.pdf'));
-await makeScoreSummary(resolve(outDir, '예시_성적집계표.pdf'), summary);
+makeItemInfoXlsx(resolve(outDir, '예시_문항정보표.xlsx'));
+await makeItemInfo(resolve(pdfDir, '예시_문항정보표.pdf'));
+const scoreColumns = buildScoreColumns(summary);
+makeScoreSummaryXlsx(resolve(outDir, '예시_성적집계표.xlsx'), scoreColumns);
+await makeScoreSummary(resolve(pdfDir, '예시_성적집계표.pdf'), scoreColumns);
 
 // 정답값: 파서·계산과 무관하게 가상 학생 답안에서 직접 구한 값
 const levelOf = (s) => (s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 70 ? 'C' : s >= 60 ? 'D' : s >= 40 ? 'E' : 'U');

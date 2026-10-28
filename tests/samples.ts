@@ -15,6 +15,12 @@ export const SAMPLE = {
   scoreSummary: '성적집계표.pdf',
 } as const;
 
+/** 같은 시험의 엑셀판 (문항정보표·성적집계표는 엑셀·PDF 둘 다 받는다) */
+export const SAMPLE_XLSX = {
+  itemInfo: '문항정보표.xlsx',
+  scoreSummary: '성적집계표.xlsx',
+} as const;
+
 export function hasSample(name: string): boolean {
   return existsSync(resolve(SAMPLES_DIR, name));
 }
