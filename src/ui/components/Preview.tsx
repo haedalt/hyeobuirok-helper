@@ -2,9 +2,10 @@
  * 협의록 미리보기. 「2학기_1차_정기시험_결과분석_협의록.hwp」 양식과 같은 순서·표 구성이며,
  * 양식의 빨간 글씨 칸(F1~F20)에 들어가는 값은 빨간 글씨로 표시한다.
  */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ACHIEVEMENT_LEVELS, formatPercent, IMPROVEMENT_KEYS, PERCENT_TOTAL_LABEL } from '../../core';
 import { choiceSymbol, formatRate, IMPROVEMENT_LABELS, LEVEL_LABELS } from '../display';
+import { copyPreviewTable } from '../exportActions';
 import type { MinutesState } from '../useMinutesState';
 
 /** 빨간 글씨 칸. 값이 없으면 어느 칸인지 보이는 빈칸 */
@@ -19,6 +20,26 @@ function Red({ value, field }: { value: ReactNode | null | undefined; field: str
   return <span className="pv-red">{value}</span>;
 }
 
+/** 표를 기존 HWP 양식에 붙여 넣을 수 있게 클립보드로 복사 (인쇄·복사 내용에서는 빠진다) */
+function CopyButton({ target, label, blackText }: { target: string; label: string; blackText: boolean }) {
+  const [state, setState] = useState<'idle' | 'done' | 'error'>('idle');
+  async function copy() {
+    try {
+      await copyPreviewTable(target, blackText);
+      setState('done');
+    } catch {
+      setState('error');
+    }
+    setTimeout(() => setState('idle'), 2000);
+  }
+  return (
+    <button type="button" className="pv-copy" data-no-copy onClick={copy} aria-label={`${label} 복사`}>
+      {state === 'done' ? '복사됨' : state === 'error' ? '복사 실패' : '복사'}
+      <span className="visually-hidden" role="status">{state === 'done' ? `${label}을(를) 복사했습니다` : ''}</span>
+    </button>
+  );
+}
+
 /** 검은 글씨 선택 칸. 비어 있으면 양식 원래 글자 */
 function Black({ value, fallback }: { value: string; fallback: string }) {
   return <>{value.trim() || fallback}</>;
@@ -31,7 +52,7 @@ export function Preview({ s }: { s: MinutesState }) {
   const isFixed = s.mode === 'fixed';
 
   return (
-    <article className="pv" aria-label="협의록 미리보기">
+    <article className={`pv${s.blackText ? ' pv--black' : ''}`} aria-label="협의록 미리보기">
       <table className="pv-frame">
         <colgroup>
           <col style={{ width: '13%' }} />
@@ -74,8 +95,10 @@ export function Preview({ s }: { s: MinutesState }) {
                 1. <Red value={n.title} field="F1 학년·과목" /> 평가 결과 분석
               </p>
 
-              <p className="pv-h2">가. 평가 결과 개요</p>
-              <table className="pv-table pv-avg">
+              <p className="pv-h2">
+                가. 평가 결과 개요 <CopyButton target="pv-table-avg" label="가. 평가 결과 개요 표" blackText={s.blackText} />
+              </p>
+              <table id="pv-table-avg" className="pv-table pv-avg">
                 <tbody>
                   <tr>
                     <th scope="row">예상평균</th>
@@ -90,11 +113,13 @@ export function Preview({ s }: { s: MinutesState }) {
                 </tbody>
               </table>
 
-              <p className="pv-h2">나. 성취수준별 분포 비율 분석</p>
+              <p className="pv-h2">
+                나. 성취수준별 분포 비율 분석 <CopyButton target="pv-table-dist" label="나. 성취수준별 분포 표" blackText={s.blackText} />
+              </p>
               <p className="pv-h3">
                 ○ 성취수준별 분포 분석(성취수준별 <span className="pv-red">{isFixed ? '고정분할점수' : '추정분할점수'}</span>)
               </p>
-              <table className="pv-table pv-dist">
+              <table id="pv-table-dist" className="pv-table pv-dist">
                 <thead>
                   <tr>
                     <th rowSpan={2} scope="col">
@@ -153,8 +178,11 @@ export function Preview({ s }: { s: MinutesState }) {
                 </p>
               )}
 
-              <p className="pv-h2">다. 예상 난이도와 실제 정답률 차이가 있는 문항 분석</p>
-              <table className="pv-table pv-items">
+              <p className="pv-h2">
+                다. 예상 난이도와 실제 정답률 차이가 있는 문항 분석{' '}
+                <CopyButton target="pv-table-items" label="다. 문항 분석 표" blackText={s.blackText} />
+              </p>
+              <table id="pv-table-items" className="pv-table pv-items">
                 <thead>
                   <tr>
                     <th rowSpan={2} scope="col">
@@ -195,32 +223,52 @@ export function Preview({ s }: { s: MinutesState }) {
                       </td>
                     </tr>
                   ) : (
-                    n.mismatchItems.map((item) => (
-                      <tr key={item.no}>
-                        <td>{item.no}</td>
-                        <td>
-                          <Red value={item.expected} field="F12" />
-                        </td>
-                        <td>
-                          <Red value={formatRate(item.correctRate)} field="F13" />
-                        </td>
-                        {item.responses.map((count, i) => (
-                          <td key={i}>
-                            <Red value={count} field="F14" />
+                    n.mismatchItems.flatMap((item) => {
+                      // 답지별 백분율 행(F14b)을 넣으면 번호·예상·정답률·정답 칸이 두 행에 걸친다
+                      const span = s.responsePercents ? 2 : undefined;
+                      const rows = [
+                        <tr key={item.no}>
+                          <td rowSpan={span}>{item.no}</td>
+                          <td rowSpan={span}>
+                            <Red value={item.expected} field="F12" />
                           </td>
-                        ))}
-                        <td>{choiceSymbol(item.answer)}</td>
-                      </tr>
-                    ))
+                          <td rowSpan={span}>
+                            <Red value={formatRate(item.correctRate)} field="F13" />
+                          </td>
+                          {item.responses.map((count, i) => (
+                            <td key={i}>
+                              <Red value={count} field="F14" />
+                            </td>
+                          ))}
+                          <td rowSpan={span}>{choiceSymbol(item.answer)}</td>
+                        </tr>,
+                      ];
+                      if (s.responsePercents) {
+                        rows.push(
+                          <tr key={`${item.no}-pct`} className="pv-pct">
+                            {item.responsePercents.map((p, i) => (
+                              <td key={i}>
+                                <Red value={formatPercent(p)} field="F14b" />
+                              </td>
+                            ))}
+                          </tr>,
+                        );
+                      }
+                      return rows;
+                    })
                   )}
                 </tbody>
               </table>
 
-              <table className="pv-table pv-improve">
+              <table id="pv-table-improve" className="pv-table pv-improve">
                 <tbody>
                   <tr>
-                    <th scope="row">개선방안</th>
-                    <td>
+                    <th scope="row">
+                      개선방안
+                      <br />
+                      <CopyButton target="pv-table-improve" label="개선방안" blackText={s.blackText} />
+                    </th>
+                    <td className="pv-left">
                       {IMPROVEMENT_KEYS.map((key, i) => (
                         <p key={key} className="pv-improve__para">
                           <Red value={s.improvementText(key)} field={`F${16 + i} ${IMPROVEMENT_LABELS[key]}`} />

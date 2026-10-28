@@ -1,6 +1,9 @@
 /** 화면·미리보기 표기 */
-import type { AchievementLevel, Choice, Difficulty, ImprovementKey, Issue } from '../core';
+import type { AchievementLevel, Difficulty, ImprovementKey, Issue } from '../core';
 import type { ParseWarning } from '../parsers';
+
+// 표기 함수는 내보내기(src/export)와 함께 쓰므로 core에 있다
+export { choiceSymbol, formatRate } from '../core';
 
 /** 개선방안 문단 이름 (양식 개선방안 칸의 순서) */
 export const IMPROVEMENT_LABELS: Record<ImprovementKey, string> = {
@@ -12,17 +15,6 @@ export const IMPROVEMENT_LABELS: Record<ImprovementKey, string> = {
 };
 
 export const LEVEL_LABELS: Record<AchievementLevel, string> = { A: 'A', B: 'B', C: 'C', D: 'D', E: 'E', U: '미도달' };
-
-const CHOICE_SYMBOLS = ['①', '②', '③', '④', '⑤'] as const;
-
-export function choiceSymbol(choice: Choice): string {
-  return CHOICE_SYMBOLS[choice - 1];
-}
-
-/** 정답률은 파일 값 그대로(소수 둘째 자리까지). 74.96을 75.0으로 올리면 75% 기준 판정과 어긋나 보인다 */
-export function formatRate(rate: number): string {
-  return `${Number(rate.toFixed(2))}%`;
-}
 
 export const DIFFICULTIES: Difficulty[] = ['쉬움', '보통', '어려움'];
 

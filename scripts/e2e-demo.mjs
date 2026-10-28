@@ -5,6 +5,7 @@
 //   옵션 --readme-shots: README용 화면 캡처를 docs/images/에 저장
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import JSZip from 'jszip';
 import { chromium } from 'playwright-core';
 
 const args = process.argv.slice(2);
@@ -29,7 +30,7 @@ if (!url) {
 console.log(`대상: ${url}`);
 
 const browser = await chromium.launch({ channel: 'msedge', headless: true });
-const context = await browser.newContext({ viewport: { width: 1366, height: 768 }, locale: 'ko-KR' });
+const context = await browser.newContext({ viewport: { width: 1366, height: 768 }, locale: 'ko-KR', acceptDownloads: true });
 const page = await context.newPage();
 const consoleErrors = [];
 page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
@@ -86,6 +87,41 @@ try {
   const average = await page.inputValue('#improvement-average');
   check('개선방안 (평균) 초안', average.includes(`실제 평균점수(${expected.summary.average}점)`) && average.includes('예상 평균점수(60점)'), true);
   check('개선방안 5문단이 미리보기에', (await cellTexts('.pv-improve__para')).filter(Boolean).length, 5);
+
+  // ---- HWPX 내려받기 --------------------------------------------------------
+  check('HWPX 내려받기 버튼 사용 가능', await page.isEnabled('text=HWPX 내려받기'), true);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('text=HWPX 내려받기')]);
+  check('HWPX 파일명', download.suggestedFilename(), `2026학년도_2학기_1차_정기시험_결과분석_협의록_${expected.meta.subjectName.replace(/\s+/g, '_')}.hwpx`);
+  const zip = await JSZip.loadAsync(readFileSync(await download.path()));
+  const sectionXml = await zip.file('Contents/section0.xml').async('string');
+  check('HWPX: 표시어가 남지 않음', sectionXml.includes('{{'), false);
+  check('HWPX: 실제 평균이 들어감', sectionXml.includes(`<hp:t>${expected.summary.average}</hp:t>`), true);
+  check('HWPX: mimetype이 맨 앞', Object.keys(zip.files)[0], 'mimetype');
+
+  // ---- 표 복사 ----------------------------------------------------------------
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
+  await page.click('button[aria-label="나. 성취수준별 분포 표 복사"]');
+  await page.waitForSelector('button[aria-label="나. 성취수준별 분포 표 복사"]:has-text("복사됨")');
+  const clip = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read();
+    return {
+      html: await (await item.getType('text/html')).text(),
+      text: await (await item.getType('text/plain')).text(),
+    };
+  });
+  check('표 복사: HTML 표에 인원과 빨간 글씨', [clip.html.includes('<table'), clip.html.includes(`${expected.levelCounts.A}명`), /color:\s*(#FF0000|rgb\(255, 0, 0\))/i.test(clip.html), clip.html.includes('복사')], [true, true, true, false]);
+  check('표 복사: 일반 글자는 탭으로 나뉜 표', clip.text.split('\n')[2]?.split('\t')[0], '인원');
+
+  // ---- 백분율 행 옵션 → 미리보기 --------------------------------------------
+  await page.check('text=답지별 백분율 행 넣기');
+  check('백분율 행 옵션: 미리보기 행 수', await page.$$eval('.pv-items tbody tr', (r) => r.length), expected.mismatches.length * 2);
+  await page.uncheck('text=답지별 백분율 행 넣기');
+
+  // ---- 인쇄(PDF) 화면: 미리보기만 -------------------------------------------
+  await page.emulateMedia({ media: 'print' });
+  check('인쇄: 마법사·복사 버튼 숨김, 미리보기만', [await page.isVisible('.wizard'), await page.isVisible('.pv-copy'), await page.isVisible('.pv')], [false, false, true]);
+  await page.emulateMedia({ media: 'screen' });
+
   check('콘솔 오류 없음', consoleErrors, []);
   check('외부로 나간 요청 없음', externalRequests, []);
 } catch (e) {

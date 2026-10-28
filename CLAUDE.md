@@ -16,13 +16,13 @@ Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 CDN 배포판 `xlsx-
 | `src/parsers/` | 엑셀·PDF → 구조화된 데이터. 입력은 `Uint8Array`/`ArrayBuffer`, DOM 의존 금지 |
 | `src/parsers/pdf/` | pdf.js로 글자 좌표(화면 좌표, 페이지 회전 반영)를 뽑아 표 복원. 브라우저·Node 공용 |
 | `scripts/pdf-dump.mjs` | PDF 좌표 덤프 도구. 새 양식 PDF 구조 확인용 (`node scripts/pdf-dump.mjs 파일.pdf [쪽]`) |
-| `src/export/` | HWPX 생성(템플릿 표시어 치환), 표 복사용 HTML 등 |
+| `src/export/` | `hwpx.ts`: 템플릿 표시어 치환·블록 삭제·문항 행 복제로 HWPX 생성(@xmldom/xmldom + JSZip, 브라우저·Node 공용). `hwpxInput.ts`: 입력 검사(가벼움). `clipboard.ts`: 표 복사(브라우저 전용) |
 | `src/ui/` | React 화면. 상태는 `useMinutesState.ts` 한 곳에서 모아 `computeMinutesNumbers`(core)에 넘김. 미리보기 `components/Preview.tsx`는 HWP 양식과 같은 구성. 브라우저 전용 설정(`setupPdfWorker.ts`)·localStorage(`storage.ts`)도 여기 |
 | `scripts/e2e-demo.mjs` | '예시 파일로 체험하기'로 화면 전 과정 확인. 배포 주소도 가능 (playwright-core + 설치된 Edge) |
 | `tests/local/` | **로컬 전용**(gitignore). samples/ 기대값 테스트와 `e2e-samples.mjs`(PRD 9-1과 화면 대조) |
 | `tests/` | Vitest 테스트. `tests/samples.ts`로 샘플 파일을 읽음 |
 | `docs/` | PRD 등 문서 |
-| `templates/` | 협의록 양식(HWP/HWPX). 커밋 대상 |
+| `templates/` | `협의록_양식.hwpx`: 내보내기 템플릿(표시어). `협의록_원본.hwp`: 표시어 넣기 전 원본. 커밋 대상 |
 | `samples/` | 실제 나이스 자료. **gitignore됨, 커밋 금지** |
 | `public/demo/` | 공개용 가상 예시 파일 4종. `scripts/make-demo.mjs`로 생성, 정답값은 `tests/fixtures/demo-expected.json` |
 

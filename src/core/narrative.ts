@@ -3,8 +3,8 @@
  * 수치 조건에 따라 문장 틀을 고르고, 틀의 {자리}에 계산된 값만 넣는다. 틀에 없는 수치는 만들지 않는다.
  * 문장 틀과 임계값은 아래 상수에서 고치면 된다. 자리 이름은 {중괄호} 안의 영문.
  */
-import { formatPercent, round1 } from './format';
-import type { Choice, Difficulty, Improvements, ItemAnalysis, ItemMemo, MinutesNumbers } from './types';
+import { choiceSymbol, formatPercent, round1 } from './format';
+import type { Difficulty, Improvements, ItemAnalysis, ItemMemo, MinutesNumbers } from './types';
 
 // ---------------------------------------------------------------------------
 // 임계값
@@ -175,8 +175,7 @@ function levelAParagraph(numbers: MinutesNumbers): string | null {
 
 // ---- (정답률 차이 분석) --------------------------------------------------------
 
-const CHOICE_SYMBOLS = ['①', '②', '③', '④', '⑤'] as const;
-const symbol = (c: Choice) => CHOICE_SYMBOLS[c - 1];
+const symbol = choiceSymbol;
 const DIFFICULTY_ORDER: Difficulty[] = ['쉬움', '보통', '어려움'];
 
 function itemGapParagraph(items: ItemAnalysis[], memos: Readonly<Record<number, ItemMemo>>): string {

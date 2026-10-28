@@ -20,6 +20,7 @@ import { countDifficulties, parseScoreSummary, type ParseResult, type SubjectSco
 import { loadLastSettings, loadSettings, saveSettings } from './storage';
 import { isRejected, readUpload, type RejectedFile, type Uploads } from './uploads';
 import { subjectGroup } from './display';
+import { hwpxFileName, missingForHwpx, type HwpxInput } from '../export/hwpxInput';
 
 export type CutKey = keyof CutScores;
 export const CUT_KEYS: CutKey[] = ['ab', 'bc', 'cd', 'de', 'eu'];
@@ -167,6 +168,24 @@ export function useMinutesState() {
   const improvementText = (key: ImprovementKey): string | null => editedTexts[key] ?? drafts[key];
   /** 교사가 고쳐서 지금 초안과 내용이 다른 문단 */
   const editedKeys = IMPROVEMENT_KEYS.filter((k) => editedTexts[k] !== undefined && editedTexts[k] !== drafts[k]);
+
+  // --- 내보내기 (src/export) --------------------------------------------------
+  /** 채운 글씨를 검정으로 / 답지별 백분율 행 (둘 다 기본 끔) */
+  const [blackText, setBlackText] = useState(false);
+  const [responsePercents, setResponsePercents] = useState(false);
+  const hwpxInput: HwpxInput = {
+    mode,
+    numbers: computed.value,
+    expectedAverage: validExpectedAverage,
+    improvements: Object.fromEntries(IMPROVEMENT_KEYS.map((k) => [k, improvementText(k)])) as HwpxInput['improvements'],
+    subjectHead: fillSubjectHead ? subjectHead : '',
+    place: optional.place,
+    attendees: optional.attendees,
+    blackText,
+    responsePercents,
+  };
+  const exportMissing = missingForHwpx(hwpxInput);
+  const exportFileName = hwpxFileName(detectedMeta ?? {}, subjectName);
 
   const difficultyCounts = itemInfo ? countDifficulties(itemInfo.items) : null;
   /** 문항정보표가 없거나 읽지 못해 예상 난이도를 직접 넣어야 하는 문항이 있음 */
@@ -316,6 +335,14 @@ export function useMinutesState() {
     setImprovementText: (key: ImprovementKey, value: string) => setEditedTexts((t) => ({ ...t, [key]: value })),
     /** 모든 문단을 지금 입력값으로 만든 초안으로 되돌린다 */
     resetImprovements: () => setEditedTexts({}),
+    // 내보내기
+    blackText,
+    setBlackText,
+    responsePercents,
+    setResponsePercents,
+    hwpxInput,
+    exportMissing,
+    exportFileName,
     setMemo: (no: number, memo: Partial<ItemMemo>) =>
       setMemos((m) => ({ ...m, [no]: { ...(m[no] ?? { misconception: '', distractorReason: '' }), ...memo } })),
     // 계산 결과

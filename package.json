@@ -14,6 +14,7 @@
     "e2e:samples": "npm run build && node tests/local/e2e-samples.mjs"
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.12",
     "jszip": "^3.10.2",
     "pdfjs-dist": "^6.4.299",
     "react": "^19.3.1",
