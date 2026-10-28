@@ -12,6 +12,7 @@ import {
   parseScoreSummary,
 } from '../src/parsers';
 import expected from './fixtures/demo-expected.json';
+import { dataNumbers, expectOnlyKnownNumbers, unknownNumbers } from './narrativeCheck';
 
 const demo = (name: string) => new Uint8Array(readFileSync(resolve(import.meta.dirname, '../public/demo', name)));
 const FILES = {
@@ -104,5 +105,20 @@ describe('데모 파일 4종', async () => {
     for (const key of IMPROVEMENT_KEYS) expect(drafts[key], key).toBeTruthy();
     expect(drafts.itemGap).toContain(`다른 문항은 ${expected.mismatches.length}문항이었음`);
     expect(drafts.itemGap).toContain(PLACEHOLDER);
+  });
+
+  it('개선방안 숫자 검증: 모든 문단의 숫자가 입력·계산 값이거나 문장 틀 자체의 숫자', () => {
+    const { value: m } = computeMinutesNumbers({
+      mode: 'fixed',
+      files: { frequency: freq.value, itemAnalysis: analysis.value, itemInfo: info.value, scoreSummary: summary.value },
+    });
+    const memos = { [expected.mismatches[0]]: { misconception: '2단계 반응식을 1단계로 착각함', distractorReason: '' } };
+    for (const expectedAverage of [50, 54, 60]) {
+      const drafts = buildImprovementDrafts({ expectedAverage, numbers: m, memos });
+      const allowed = dataNumbers(m, expectedAverage, memos);
+      for (const key of IMPROVEMENT_KEYS) expectOnlyKnownNumbers(drafts[key]!, allowed);
+      // 지어낸 숫자는 잡아낸다
+      expect(unknownNumbers(`${drafts.average} 123.4점 456명`, allowed)).toEqual([123.4, 456]);
+    }
   });
 });

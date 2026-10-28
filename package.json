@@ -10,7 +10,8 @@
     "test:watch": "vitest",
     "lint": "oxlint",
     "preview": "vite preview",
-    "e2e": "npm run build && node scripts/e2e-samples.mjs"
+    "e2e": "npm run build && node scripts/e2e-demo.mjs",
+    "e2e:samples": "npm run build && node tests/local/e2e-samples.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.2",
@@ -31,5 +32,6 @@
     "typescript": "~7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
-  }
+  },
+  "license": "MIT"
 }

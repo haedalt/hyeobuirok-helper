@@ -83,16 +83,16 @@ HWPX 내려받기가 추가되면 이렇게 쓰게 됩니다.
 
 ## 개발자용
 
-요구사항의 기준은 [`docs/PRD.md`](docs/PRD.md), 작업 규칙은 [`CLAUDE.md`](CLAUDE.md)입니다.
+작업 규칙은 [`CLAUDE.md`](CLAUDE.md)에 있습니다. 요구사항 문서(PRD)와 실제 학교 자료로 만든 테스트는 실제 시험 수치가 들어 있어 저장소에 올리지 않고 개발자 컴퓨터에만 둡니다(`docs/PRD.md`, `samples/`, `tests/local/`).
 
 ```bash
 npm install
 npm run dev      # 개발 서버
-npm test         # Vitest (samples/가 없으면 실제 학교 파일 테스트는 건너뛰고 public/demo/ 테스트가 돈다)
+npm test         # Vitest. 공개 테스트는 public/demo/ 가상 파일로 돈다 (tests/local/이 있으면 함께 실행)
 npm run build    # 타입 검사 + 빌드 → dist/ (base 경로 = /저장소 이름/)
 npm run lint     # oxlint
-npm run e2e      # 브라우저 전체 과정 확인 (samples/ 필요, 설치된 Microsoft Edge 사용)
-node scripts/e2e-demo.mjs [배포 주소]   # 예시 파일로 전체 과정 확인 (samples/ 불필요)
+npm run e2e      # 빌드 후 '예시 파일로 체험하기'로 브라우저 전체 과정 확인 (설치된 Microsoft Edge 사용)
+node scripts/e2e-demo.mjs https://<사용자>.github.io/<저장소>/   # 배포된 주소에서 같은 확인
 ```
 
 기술 스택: Vite + React + TypeScript, Vitest, SheetJS(엑셀), pdfjs-dist(PDF 글자 좌표로 표 복원), JSZip(HWPX).
@@ -108,10 +108,12 @@ node scripts/e2e-demo.mjs [배포 주소]   # 예시 파일로 전체 과정 확
 | `public/demo/` | 공개용 가상 예시 파일. `node scripts/make-demo.mjs <한글 TTF 글꼴>`로 다시 만든다 (나눔고딕 OFL 권장). 정답값은 `tests/fixtures/demo-expected.json` |
 | `scripts/` | 데모 생성, 브라우저 검사, PDF 좌표 덤프(`pdf-dump.mjs`) |
 | `templates/` | 협의록 양식 |
-| `samples/` | 실제 학교 자료. **저장소에 올리지 않는다** (`.gitignore`) |
+| `samples/`, `tests/local/`, `docs/PRD.md` | 실제 학교 자료와 그 기대값. **저장소에 올리지 않는다** (`.gitignore`) |
 
 `main`에 푸시하면 GitHub Actions가 린트 → 테스트 → 빌드 → GitHub Pages 배포를 합니다(`.github/workflows/deploy.yml`).
 
 ## 라이선스
 
-(추가 예정)
+[MIT](LICENSE). 자유롭게 쓰고 고치고 나눌 수 있습니다.
+
+`public/demo/`의 예시 PDF에는 [나눔고딕](https://github.com/google/fonts/tree/main/ofl/nanumgothic)(SIL Open Font License 1.1)의 일부 글자가 들어 있습니다. 예시 파일의 학교·교사·과목·성적은 모두 가상입니다.
