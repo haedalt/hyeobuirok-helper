@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -20,4 +21,15 @@ export function hasSample(name: string): boolean {
 
 export function readSample(name: string): Uint8Array {
   return new Uint8Array(readFileSync(resolve(SAMPLES_DIR, name)));
+}
+
+export const ALL_SAMPLE_NAMES: string[] = Object.values(SAMPLE);
+
+/**
+ * samples/ 파일이 모두 있을 때만 묶음 본문을 실행한다.
+ * describe.skipIf는 건너뛰어도 본문(파일 읽기)을 실행하므로, 샘플이 없는 CI에서 실패한다.
+ */
+export function describeWithSamples(names: string[], title: string, factory: () => void | Promise<void>): void {
+  if (names.every(hasSample)) describe(title, factory);
+  else describe.skip(`${title} (samples/ 없음)`, () => it.skip('건너뜀', () => {}));
 }

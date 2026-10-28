@@ -28,3 +28,6 @@ samples/
 
 # e2e 스크린샷 (샘플 내용이 찍힘)
 e2e-screenshots/
+
+# 내보내기 결과 (샘플로 만든 파일)
+out/

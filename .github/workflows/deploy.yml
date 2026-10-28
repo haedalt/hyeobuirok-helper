@@ -1,5 +1,7 @@
-name: GitHub Pages 배포
+name: 테스트 후 GitHub Pages 배포
 
+# main에 푸시하면: 테스트 → 빌드 → GitHub Pages 배포
+# (samples/는 저장소에 없으므로 실제 학교 파일 테스트는 건너뛰고, public/demo/ 가상 파일 테스트가 돈다)
 on:
   push:
     branches: [main]
@@ -24,11 +26,17 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
-      - run: npm run build
+      - name: 린트
+        run: npm run lint
+      - name: 테스트
+        run: npm test
+      - name: 빌드 (base = /저장소 이름/)
+        run: npm run build
+      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
   deploy:
     needs: build
     runs-on: ubuntu-latest

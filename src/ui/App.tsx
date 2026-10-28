@@ -95,6 +95,23 @@ export default function App() {
       </header>
       <main className="app__main">
         <div className="wizard" aria-label="작성 단계">
+          {Object.keys(s.uploads).length === 0 && (
+            <div className="demo-banner">
+              <p>
+                처음이신가요? 가상 학교의 예시 자료로 전체 과정을 먼저 체험해 볼 수 있습니다.
+              </p>
+              <button
+                type="button"
+                className="button"
+                disabled={s.busy}
+                onClick={async () => {
+                  if (await s.loadDemo()) goTo(2);
+                }}
+              >
+                {s.busy ? '불러오는 중…' : '예시 파일로 체험하기'}
+              </button>
+            </div>
+          )}
           {STEP_TITLES.map((title, i) => {
             const no = i + 1;
             return (

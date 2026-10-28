@@ -23,6 +23,7 @@ Vite + React + TypeScript, Vitest. 엑셀은 SheetJS(공식 CDN 배포판 `xlsx-
 | `docs/` | PRD 등 문서 |
 | `templates/` | 협의록 양식(HWP/HWPX). 커밋 대상 |
 | `samples/` | 실제 나이스 자료. **gitignore됨, 커밋 금지** |
+| `public/demo/` | 공개용 가상 예시 파일 4종. `scripts/make-demo.mjs`로 생성, 정답값은 `tests/fixtures/demo-expected.json` |
 
 ## 명령
 
@@ -38,7 +39,9 @@ npm run e2e      # 빌드 후 브라우저로 samples/ 전 과정 확인 (sample
 
 - 파서와 계산은 순수 함수로 `src/parsers`·`src/core`에 두고 UI에서 분리한다. UI는 이 함수들을 호출해 결과를 보여주기만 한다.
 - `samples/`는 절대 커밋하지 않는다(학교명·교사명·IP가 들어 있다). 커밋 전 `git status`로 확인한다. 테스트에 필요한 값은 샘플 파일 대신 기대값으로 적는다.
-- 샘플 파일이 필요한 테스트는 `it.skipIf(!hasSample(...))`로 감싸 샘플이 없는 환경(CI)에서도 통과하게 한다.
+- 샘플 파일이 필요한 묶음은 `describeWithSamples([...], ...)`(tests/samples.ts), 개별 테스트는 `it.skipIf(!hasSample(...))`로 감싼다. `describe.skipIf`는 건너뛰어도 본문(파일 읽기)을 실행해 CI에서 실패하므로 쓰지 않는다. 바꾼 뒤에는 samples/를 잠시 치우고 `npm test`가 통과하는지 확인한다.
+- CI에서 도는 테스트는 `public/demo/` 가상 파일(`tests/demo.test.ts`)로 한다. 파서·계산을 바꾸면 이 테스트도 통과해야 한다.
+- 공개되는 파일(코드 주석, 테스트, 문서, 커밋 메시지 포함)에 실제 학교명·교사명·IP·학교 내부 코드를 쓰지 않는다. 예시는 '가상고등학교', '홍길동'처럼 가상의 값으로.
 - 숫자 결과는 PRD 9-1장 기대값으로 테스트한다.
 - UI 문구는 전부 한국어.
 - 파일은 브라우저 밖으로 보내지 않는다(PRD 8장 개인정보). 네트워크 호출은 AI 다듬기(선택 기능)만 예외.

@@ -48,6 +48,9 @@ function cutsToInputs(cuts: CutScores | undefined): Record<CutKey, string> {
   };
 }
 
+/** public/demo/의 가상 예시 파일 (scripts/make-demo.mjs로 생성) */
+const DEMO_FILES = ['예시_문항분석표.xlsx', '예시_문항정보표.pdf', '예시_성적집계표.pdf', '예시_도수분포표.xlsx'];
+
 const EMPTY_COUNTS: Record<AchievementLevel, string> = { A: '', B: '', C: '', D: '', E: '', U: '' };
 
 export function useMinutesState() {
@@ -206,6 +209,27 @@ export function useMinutesState() {
     }
   }
 
+  /** 가상 데모 파일 4종(public/demo/)을 같은 사이트에서 받아 올린다 */
+  async function loadDemo(): Promise<boolean> {
+    setBusy(true);
+    try {
+      const files = await Promise.all(
+        DEMO_FILES.map(async (name) => {
+          const res = await fetch(`${import.meta.env.BASE_URL}demo/${encodeURIComponent(name)}`);
+          if (!res.ok) throw new Error(`${name}: ${res.status}`);
+          return new File([await res.blob()], name);
+        }),
+      );
+      setModeState('fixed');
+      await addFiles(files);
+      return true;
+    } catch {
+      setBusy(false);
+      setNotice('예시 파일을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 눌러 주세요.');
+      return false;
+    }
+  }
+
   function removeFile(kind: keyof Uploads) {
     setUploads((u) => {
       const next = { ...u };
@@ -253,6 +277,7 @@ export function useMinutesState() {
     rejected,
     busy,
     addFiles,
+    loadDemo,
     removeFile,
     notice,
     dismissNotice: () => setNotice(null),
